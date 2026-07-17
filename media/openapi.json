@@ -47,6 +47,31 @@
           }
         }
       }
+    },
+    "/processing-activities/_batch": {
+      "post": {
+        "operationId": "batchProcessingActivities",
+        "description": "Batch operatie voor het ophalen van meerdere sets dataverwerkingen in een enkele aanvraag",
+        "summary": "Batch ophalen van dataverwerkingen",
+        "tags": ["ProcessingActivities"],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/BatchProcessingActivityRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BatchProcessingActivitiesResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -57,6 +82,16 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ProcessingActivityRequest"
+            }
+          }
+        }
+      },
+      "BatchProcessingActivityRequest": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BatchProcessingActivityRequest"
             }
           }
         }
@@ -78,6 +113,21 @@
           }
         }
       },
+      "BatchProcessingActivitiesResponse": {
+        "description": "OK",
+        "headers": {
+          "API-Version": {
+            "$ref": "https://static.developer.overheid.nl/adr/components.yaml#/headers/API-Version"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BatchProcessingActivitiesResponse"
+            }
+          }
+        }
+      },
       "BadRequest": {
         "description": "Bad Request",
         "headers": {
@@ -95,6 +145,21 @@
       },
       "Unauthorized": {
         "description": "Unauthorized",
+        "headers": {
+          "API-Version": {
+            "$ref": "https://static.developer.overheid.nl/adr/components.yaml#/headers/API-Version"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Nlgovproblem"
+            }
+          }
+        }
+      },
+      "PayloadTooLarge": {
+        "description": "Payload Too Large",
         "headers": {
           "API-Version": {
             "$ref": "https://static.developer.overheid.nl/adr/components.yaml#/headers/API-Version"
@@ -261,6 +326,82 @@
           "organizationName": {
             "type": "string",
             "description": "Organisatie waartoe dit Logboek behoort"
+          }
+        }
+      },
+      "BatchProcessingActivityRequest": {
+        "type": "object",
+        "required": ["requests"],
+        "properties": {
+          "context": {
+            "type": "object",
+            "description": "Optionele contextuele criteria die op alle request items worden toegepast",
+            "additionalProperties": true
+          },
+          "requests": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "Lijst van batch aanvragen. Elke aanvraag bevat filter criteria voor dataverwerkingen.",
+            "items": {
+              "$ref": "#/components/schemas/BatchProcessingActivityRequestItem"
+            }
+          }
+        },
+        "description": "Batch aanvraag voor het ophalen van meerdere sets dataverwerkingen"
+      },
+      "BatchProcessingActivityRequestItem": {
+        "type": "object",
+        "required": ["filter"],
+        "properties": {
+          "filter": {
+            "$ref": "#/components/schemas/ProcessingActivityFilter"
+          }
+        },
+        "description": "Individuele batch aanvraag met filter criteria"
+      },
+      "ProcessingActivityFilter": {
+        "type": "object",
+        "minProperties": 1,
+        "description": "Filter criteria voor dataverwerkingen. Minimaal één property moet worden opgegeven.",
+        "properties": {
+          "traceId": {
+            "$ref": "#/components/schemas/TraceID"
+          },
+          "startTime": {
+            "$ref": "#/components/schemas/StartTime"
+          },
+          "endTime": {
+            "$ref": "#/components/schemas/EndTime"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/Attributes"
+          }
+        }
+      },
+      "BatchProcessingActivitiesResponse": {
+        "type": "object",
+        "required": ["results"],
+        "properties": {
+          "results": {
+            "type": "array",
+            "description": "Lijst van resultaten, in dezelfde volgorde als de requests in de aanvraag",
+            "items": {
+              "$ref": "#/components/schemas/BatchProcessingActivityResult"
+            }
+          }
+        }
+      },
+      "BatchProcessingActivityResult": {
+        "type": "object",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "Lijst van dataverwerkingen die voldoen aan de filter criteria",
+            "items": {
+              "$ref": "#/components/schemas/ProcessingActivity"
+            }
           }
         }
       }
